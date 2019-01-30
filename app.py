@@ -28,11 +28,11 @@ async def handle_upload(request):
     #logger.info(f"{image.name}")
 
     s3 = boto3.client('s3')
-    bucket_name = os.environ('BUCKET_NAME')
+    bucket_name = os.environ.get('BUCKET_NAME')
     
     # Temporary workaround, write directories and files locally to ship to S3
-    outdir = f"images/output/{upload_id}/"
-    updir = f"images/upload/"
+    outdir = f"images/output/{upload_id}"
+    updir = f"images/upload"
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
@@ -48,7 +48,7 @@ async def handle_upload(request):
 
     # Read local output 'face' images and ship to S3
     for output_image in os.listdir(f"./{outdir}"):
-        s3.put_object(Bucket=bucket_name, Key=f'{outdir}/{output_image}', Body=data)
+        s3.put_object(Bucket=bucket_name, Key=f'{outdir}/{output_image}', Body=open(f"./{outdir}/{output_image}", 'rb'))
         
     # Local file and directory cleanup
     for path in ["./images/output/",f"{updir}"]:
