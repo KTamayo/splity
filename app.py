@@ -2,7 +2,7 @@ import datetime, os, random, string, shutil, time
 
 from sanic import response, Sanic
 from sanic.log import logger
-#from sanic.request import RequestParameters
+from sanic.views import HTTPMethodView
 
 import boto3
 
@@ -17,9 +17,8 @@ async def test(request):
         <a href="/image">Split your image!</a>
         ''')
 
-@app.route("/image", methods=['GET','POST'])
-async def handle_upload(request):
-    if request.method == 'GET':
+class ImageUploadsView(HTTPMethodView):
+    def get(self, request):
         return response.html('''
             <form method="post" enctype=multipart/form-data action"">
             <input type=file name=image>
@@ -27,8 +26,8 @@ async def handle_upload(request):
             </form>
             <a href="/">Go to landing page.</a>
             ''')
-    if request.method == 'POST':
-        #if request.method == 'POST':
+
+    async def post(self, request):        
         ts = time.time()
         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y%m%d%H%M%S')
         upload_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=7)) + "_" + timestamp
@@ -68,6 +67,8 @@ async def handle_upload(request):
                     print(e)
         
         return response.text(f"{request.files.get('image').name} uploaded successfully")
+
+app.add_route(ImageUploadsView.as_view(), '/image')
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=8000)
